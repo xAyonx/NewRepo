@@ -1,6 +1,8 @@
 const fs = require("fs");
 const cors = require("cors");
 const express = require('express');
+const bodyParser = require("body-parser");
+app.use(bodyParser.json());
 
 //copy n past from Getting started to run it with postgres
 const { Client } = require('pg');
