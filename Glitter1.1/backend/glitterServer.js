@@ -1,12 +1,11 @@
 const fs = require("fs");
 const cors = require("cors");
 const express = require('express');
-const bodyParser = require("body-parser");
-app.use(bodyParser.json());
+// const bodyParser = require("body-parser");
+
 
 //copy n past from Getting started to run it with postgres
 const { Client } = require('pg');
-const { response } = require("express");
 const client = new Client({
     user: "postgres",
     database: "glitter", 
@@ -15,29 +14,30 @@ const client = new Client({
     host:"locolhost",
 })
 
-await client.connect()
+client.connect()
 
 const app = express();
 app.use(cors())
+app.use(express.json());
 
 const hostname = "0.0.0.0"
 const port = 4000
 
 //const glittsFile = "./glitts.json" is commented out, because the following lines should replace this function 
 //Adding new rows expecting to get a connection with postgres
-const res = await client.query("select * from glitts");
-console.log(res.rows) 
+//const res = await client.query("select * from glitts");
+//console.log(res.rows) 
 
 
 class Glitt {
     user;
     text;
-    datetime;
+   // datetime;
 
     constructor(data) {
         this.user = data.user;
         this.text = data.text;
-        this.datetime = data.datetime;
+       // this.datetime = data.datetime;
     }
 }
 
@@ -53,14 +53,20 @@ function readGlittsFromFile() {
 }
 // query the content via the database
 app.get("/glitts", (request, response) => {
-    response.send(readGlittsFromFile().reverse());
+    client.query("select * from glitts", (err,res)=>{
+        if(!err){
+            const glitts = [];
+            res.rows.forEach(row=>glitts.push(new Glitt(row)));
+            res.status(201).send(glitts)
+        }
+        else{
+            res.status(400).send("cant load message")
+            console.log(err.message) 
+        }
+
+    })
 });
 
-client.query(("select * from glitts").then((err, res) => {
-    if (!response.ok) {
-        console.log(glitts)} 
-    client.end()
-    }))
 
 
 
@@ -79,14 +85,17 @@ app.listen(4000, () => {
 //Post entry to the database
 app.post('/glitts', (req, res)=> {
     const glitts = req.pg;
-    client.query(insertQuery, (err, result)=>{
+    const insertQuery = "INSERT INTO glitts(user, text) VALUES($1, $2)"
+    client.query(insertQuery,[req.body.user, req.body.text], (err, result)=>{
         if(!err){
-            res.send('Insertion was successful')
+            res.status(201).send('Insertion was successful')
         }
-        else{ console.log(err.message) }
+        else{
+            res.status(400).send("Insertion was not successful")
+            console.log(err.message) }
     })
-    client.end;
+    
 })
-app.listen(4000, () => {
-    console.log("Listen on the port 4000...");
+app.listen(port, () => {
+    console.log(`Listen on the port ${port}...`);
 });
