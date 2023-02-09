@@ -11,7 +11,7 @@ const client = new Client({
     database: "glitter", 
     password: "postgres",
     port: 5432,
-    host:"locolhost",
+    host:"127.0.0.1",
 })
 
 client.connect()
@@ -57,11 +57,11 @@ app.get("/glitts", (request, response) => {
         if(!err){
             const glitts = [];
             res.rows.forEach(row=>glitts.push(new Glitt(row)));
-            res.status(201).send(glitts)
+            response.status(201).send(glitts)
         }
         else{
-            res.status(400).send("cant load message")
-            console.log(err.message) 
+            response.status(400).send("cant load message")
+            console.log(err) 
         }
 
     })
