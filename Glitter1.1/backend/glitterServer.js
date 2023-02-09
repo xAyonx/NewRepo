@@ -8,10 +8,10 @@ const express = require('express');
 const { Client } = require('pg');
 const client = new Client({
     user: "postgres",
-    database: "glitter", 
+    database: "glitter",
     password: "postgres",
     port: 5432,
-    host:"127.0.0.1",
+    host: "127.0.0.1",
 })
 
 client.connect()
@@ -32,12 +32,12 @@ const port = 4000
 class Glitt {
     user;
     text;
-   // datetime;
+    // datetime;
 
     constructor(data) {
         this.user = data.user;
         this.text = data.text;
-       // this.datetime = data.datetime;
+        // this.datetime = data.datetime;
     }
 }
 
@@ -53,15 +53,15 @@ function readGlittsFromFile() {
 }
 // query the content via the database
 app.get("/glitts", (request, response) => {
-    client.query("select * from glitts", (err,res)=>{
-        if(!err){
+    client.query("select * from glitts", (err, res) => {
+        if (!err) {
             const glitts = [];
-            res.rows.forEach(row=>glitts.push(new Glitt(row)));
+            res.rows.forEach(row => glitts.push(new Glitt(row)));
             response.status(201).send(glitts)
         }
-        else{
+        else {
             response.status(400).send("cant load message")
-            console.log(err) 
+            console.log(err)
         }
 
     })
@@ -83,19 +83,62 @@ app.listen(4000, () => {
 });*/
 
 //Post entry to the database
-app.post('/glitts', (req, res)=> {
+/*app.post('/glitts', (req, res) => {
     const glitts = req.pg;
     const insertQuery = "INSERT INTO glitts(user, text) VALUES($1, $2)"
-    client.query(insertQuery,[req.body.user, req.body.text], (err, result)=>{
-        if(!err){
+    client.query(insertQuery, [req.body.user, req.body.text], (err, result) => {
+        if (!err) {
             res.status(201).send('Insertion was successful')
         }
-        else{
+        else {
             res.status(400).send("Insertion was not successful")
-            console.log(err.message) }
+            console.log(err.message)
+        }
     })
-    
-})
+
+})*/
+
+// 1. Hole den User aus der Datenbank ***
+
+// 2. Wenn der User nicht in der Datenbank drin, gib ein 401 zurück. 
+
+// 3. Wenn der User in der Datenbank drin, prüfe das Password!
+
+// 4. Wenn das Passwort übereinstimmt, erstelle eine Session (+ token Kryrographisch)
+
+// 5. Speichere die Session.
+
+// 6. Gib den Token der Session an das Frontend zurück.
+
+function postSession(request, response) {
+    console.log('/Session wurde abgefragt');
+
+    const { username, password } = request.body;
+        
+    if (!username || !password) {
+
+        response.status(400).send("Please enter username and password!");
+
+    }
+
+    const insertQuery = "select * from users where user = $1"
+    client.query(insertQuery, [username], (err, result) => {
+        if (!err) {
+            response.status(201).send('Insertion was successful')
+        }
+        else {
+            response.status(400).send("Insertion was not successful")
+            console.log(err.message)
+        }
+    }) 
+
+}
+
+app.post("/session", postSession);
+
+
 app.listen(port, () => {
     console.log(`Listen on the port ${port}...`);
 });
+
+
